@@ -1,11 +1,17 @@
 package com.github.alinz.reactnativewebviewbridge;
 
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.views.webview.ReactWebViewManager;
 import com.facebook.react.views.webview.WebViewConfig;
+
+
+import android.annotation.TargetApi;
+import android.webkit.PermissionRequest;
+import android.os.Build;
 
 import java.util.Map;
 
@@ -21,8 +27,16 @@ public class WebViewBridgeManager extends ReactWebViewManager {
     super(new WebViewConfig() {
       @Override
       public void configWebView(WebView webView) {
-          JavascriptBridge jsInterface = new JavascriptBridge((ReactContext)webView.getContext());
-          webView.addJavascriptInterface(jsInterface, "WebViewBridgeAndroid");
+        JavascriptBridge jsInterface = new JavascriptBridge((ReactContext)webView.getContext());
+        webView.addJavascriptInterface(jsInterface, "WebViewBridgeAndroid");
+        webView.setWebChromeClient(new WebChromeClient() {
+
+          @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+          @Override
+          public void onPermissionRequest(final PermissionRequest request) {
+            request.grant(request.getResources());
+          }
+        });
       }
     });
   }
@@ -71,8 +85,8 @@ public class WebViewBridgeManager extends ReactWebViewManager {
             + "if (window.WebViewBridge) return;"
             + "var customEvent = document.createEvent('Event');"
             + "var WebViewBridge = {"
-              + "send: function(message) { WebViewBridgeAndroid.send(message); },"
-              + "onMessage: function() {}"
+            + "send: function(message) { WebViewBridgeAndroid.send(message); },"
+            + "onMessage: function() {}"
             + "};"
             + "window.WebViewBridge = WebViewBridge;"
             + "customEvent.initEvent('WebViewBridge', true, true);"
