@@ -2,6 +2,7 @@ package com.github.alinz.reactnativewebviewbridge;
 
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
+import android.webkit.WebSettings;
 
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
@@ -31,12 +32,25 @@ public class WebViewBridgeManager extends ReactWebViewManager {
         webView.addJavascriptInterface(jsInterface, "WebViewBridgeAndroid");
         webView.setWebChromeClient(new WebChromeClient() {
 
+          // Starting with 5.0, we need to grant permission for the camera when
+          // using getUserMedia
           @TargetApi(Build.VERSION_CODES.LOLLIPOP)
           @Override
           public void onPermissionRequest(final PermissionRequest request) {
             request.grant(request.getResources());
           }
         });
+        // Allow chrome inspecting for the webview
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+          WebView.setWebContentsDebuggingEnabled(true);
+        }
+        // Starting with Android 5.0, this setting was disabled. We need to enable
+        // it until we get all sites using SSL
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+          webView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        }
+        webView.getSettings().setAllowFileAccessFromFileURLs(true);
+        webView.getSettings().setAllowUniversalAccessFromFileURLs(true);
       }
     });
   }
